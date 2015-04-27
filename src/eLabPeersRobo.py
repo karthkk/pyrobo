@@ -19,11 +19,11 @@ MOTOR_PORTS = [3, 4, 5, 6, 7, 8]
 def init_robo(is_demo):
     start_position = np.array([0, 0, 0, 0, 0])
     servo = servo_control.SerialServoConnection(MOTOR_PORTS, demo_mode=is_demo)
-    eLabRobo = Robot(robot_function, servo_control=servo)
+    eLabRobo = Robot(robot_function, start_position, servo_control=servo)
     #Move all servos to position one Servo at a time
     all_port_positions = []
-    for i in range(start_position):
-        all_port_positions.append((MOTOR_PORTS[i], start_position[i]))
+    for i in range(len(start_position)):
+        all_port_positions.append(start_position[i])
         servo.move(all_port_positions, 1000)
         time.sleep(2)
     return eLabRobo
