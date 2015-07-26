@@ -1,0 +1,21 @@
+#distutils sources = elas.cpp
+
+from libc.stdint cimport * 
+import numpy as np
+cimport numpy as np
+
+        
+cdef extern from "elas.h":
+     cdef cppclass Elas:
+          Elas(parameters param);
+          void process (uint8_t* I1,uint8_t* I2,float* D1,float* D2,const int32_t* dims);
+
+cdef class PyElas:
+
+     cdef Elas *thisptr;
+
+     cdef __cinit__(self, param):
+          self.thisptr = new Elas(param)
+
+     def __dealloc__(self):
+         del self.thisptr
