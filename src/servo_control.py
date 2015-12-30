@@ -17,12 +17,19 @@ def radian_to_pulse_width(angle_in_radians):
     return 2*angle_in_radians/pi*1000 + 1500
 
 
+class ClawPositions:
+    HalfOpen = 1500
+    FullOpen = 1000
+    FullClosed = 1700
+
+
 class SerialServoConnection:
 
-    def __init__(self, motor_ports, serial_port="/dev/cu.usbmodem1411", demo_mode=False):
+    def __init__(self, motor_ports, claw_port, serial_port="/dev/cu.usbmodem1411", demo_mode=False):
         self.demo_mode = demo_mode
         self.serial_port = serial_port
         self.motor_ports = motor_ports
+        self.claw_port = claw_port
         self.serial_conn = self.open_serial_connection()
 
     def open_serial_connection(self):
@@ -30,30 +37,24 @@ class SerialServoConnection:
             return serial.Serial(self.serial_port)
         return MockSerial()
 
-    def move(self, angles_in_radians, speed=1000, motor_commands_serially=False):
+    def move(self, angles_in_radians, speed=1000, claw_position=ClawPositions.HalfOpen):
         """
         :param angles_in_radians: List of motor angles to turn to in radians
         :param speed: Speed for the servo controller
-        :param motor_commands_serially: Should each motor be moved in serial.  Useful for debugging.
+        :param claw_position: Claw open or close
         :return:None
         """
         port_pos_map = zip(self.motor_ports,  angles_in_radians)
-        self.move_dict(port_pos_map, speed, motor_commands_serially)
+        self.move_dict(port_pos_map, claw_position, self.claw_port, speed)
 
-    def move_dict(self, port_pos_map, speed=1000, motor_commands_serially=False):
+    def move_dict(self, port_pos_map, claw_position, claw_port, speed=500):
 
         port_servo_input_map = map(lambda (port, pos): (port, radian_to_pulse_width(pos)), port_pos_map)
-        if not motor_commands_serially:
-            pos_str = ''.join(map(lambda (motor_id, post): "#%dP%d" % (motor_id, post),
-                                  port_servo_input_map))+"T%d\r\n" % speed
-            print pos_str
-            self.serial_conn.write(pos_str)
-        else:
-            for (motor_id, post) in port_servo_input_map:
-                pos_str = "#%dP%d" % (motor_id, post)+"T%d\r\n" % speed
-                print pos_str
-                self.serial_conn.write(pos_str)
-                time.sleep(2) # inter motor time
+        pos_str = ''.join(map(lambda (motor_id, post): "#%dP%d" % (motor_id, post),
+                              port_servo_input_map))+"T%d\r\n" % speed
+        pos_str = "#%dP%d%s"%(claw_port, claw_position, pos_str)
+        print pos_str
+        self.serial_conn.write(pos_str)
 
 """
     For elab peers robo:
