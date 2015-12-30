@@ -4,5 +4,7 @@ import numpy as np
 
 setup(ext_modules = cythonize(
     "pyelas.pyx",
-    language = "c++",
-), include_dirs = [np.get_include()],)
+    extra_compile_args = ['-march=core2 -msse3 '],
+    language = "c++", ), 
+    include_dirs = [np.get_include()],
+)
