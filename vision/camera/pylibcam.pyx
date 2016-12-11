@@ -1,4 +1,4 @@
-# distutils: include_dirs = /usr/include/opencv
+# distutils: include_dirs = /usr/local/include/opencv
 # distutils: sources = libcam.cpp
 from libcpp cimport bool
 import numpy as np
@@ -75,6 +75,9 @@ cdef class PyCamera:
          for i in range(self.sz):
              result[i] =  self.mem[i]
          return  result.reshape(self.h, self.w, 3)
+
+     def toRGB(self, npimg):
+         self.thisptr.toRGB(npimg)
 
      def toMono(self, img):
          return self.thisptr.toMono(img)
