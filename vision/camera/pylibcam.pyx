@@ -49,18 +49,28 @@ cdef extern from "libcam.h":
 
 cdef class PyCamera:
      cdef Camera *thisptr
-     cdef unsigned char* mem
+     cdef unsigned char* img_stg
      cdef int sz, w, h
      def __cinit__(self, const char *n, int w, int h, int f):
          self.thisptr = new Camera(n, w, h, f)
          self.sz = 3*w*h
          self.w = w
          self.h = h
-         self.mem = <unsigned char*> PyMem_Malloc(self.sz * sizeof(unsigned char))
+         mem = <unsigned char*> PyMem_Malloc(self.sz * sizeof(unsigned char))
+         if not mem:
+             raise MemoryError()
+         self.img_stg = mem
+         for i in range(100):
+             self.img_stg[i] = 'k'
+         self.img_stg[i+1]='\0'
+
+
+     def get_mem(self):
+         return self.img_stg 
 
      def __dealloc__(self):
          del self.thisptr
-         PyMem_Free(self.mem)
+         PyMem_Free(self.img_stg)
 
      def update(self, t, timeout):
          return self.thisptr.Update(t, timeout)
@@ -70,14 +80,11 @@ cdef class PyCamera:
 #         return self.thisptr.Update(c2.thisptr, t, timeout_ms)
 
      def toRGB(self):
-         self.thisptr.toRGB(self.mem)
+         self.thisptr.toRGB(self.img_stg)
          result = np.zeros((self.sz,), dtype=np.uint8)
          for i in range(self.sz):
-             result[i] =  self.mem[i]
+             result[i] =  self.img_stg[i]
          return  result.reshape(self.h, self.w, 3)
-
-     def toRGB(self, npimg):
-         self.thisptr.toRGB(npimg)
 
      def toMono(self, img):
          return self.thisptr.toMono(img)

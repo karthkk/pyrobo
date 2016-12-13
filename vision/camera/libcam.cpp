@@ -538,7 +538,6 @@ unsigned char *Camera::Get() {
 
     case IO_METHOD_MMAP:
 		CLEAR(buf);
-                CLEAR(data);
 		buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
 		buf.memory = V4L2_MEMORY_MMAP;
 		if(-1 == xioctl (fd, (int)VIDIOC_DQBUF, &buf)) {
@@ -612,7 +611,7 @@ bool Camera::Update(Camera *c2, unsigned int t, int timeout_ms) {
 // Converts the data to 24bit RGB format
 void Camera::toRGB(unsigned char * img)
 {
- 	CLEAR(img);
+ 	//CLEAR(img);
 	for(int x = 0; x < w2; x++) {
 		for(int y = 0; y < height; y++) {
 			int y0, y1, u, v;
