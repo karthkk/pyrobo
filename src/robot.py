@@ -1,6 +1,7 @@
 
 from scipy.optimize import fmin_l_bfgs_b
 import time
+from servo_control import ClawPositions
 
 class Robot:
     def __init__(self, robo_def, start_pos, servo_control=None, motor_commands_in_serial=False):
@@ -24,7 +25,7 @@ class Robot:
             self.servo_control.move(list(self.current_pos), speed)
             time.sleep(speed*2./1000)
 
-    def move_to(self, pos, steps=20, speed=1000):
+    def move_to(self, pos, steps=20, speed=500):
         start = self.current_pos
         end_pos = self.ikine(pos, self.current_pos)[0]
         print end_pos
@@ -34,8 +35,13 @@ class Robot:
             print self.current_pos, "Before"
             self.current_pos = self.current_pos + step
             print self.current_pos, "After"
-            self.servo_control.move(list(self.current_pos), speed, self.motor_commands_in_serial)
+            self.servo_control.move(list(self.current_pos), speed)
             time.sleep(0.3)
 
+    def open_claw(self):
+        self.servo_control.move(list(self.current_pos), claw_position=ClawPositions.FullOpen)
+
+    def close_claw(self):
+        self.servo_control.move(list(self.current_pos), claw_position=ClawPositions.FullClosed)
 
 
