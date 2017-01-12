@@ -1,14 +1,20 @@
 
 from scipy.optimize import fmin_l_bfgs_b
 import time
-from servo_control import ClawPositions
 
 class Robot:
-    def __init__(self, robo_def, start_pos, servo_control=None, motor_commands_in_serial=False):
+
+    CLAW_OPEN = 1
+    CLAW_CLOSED = 0
+    CLAW_HALF_OPEN = 0.5
+
+    def __init__(self, robo_def, start_pos, servo_control, claw_info):
         self.robo_fkine = robo_def
         self.servo_control = servo_control
         self.current_pos = start_pos
-        self.motor_commands_in_serial = motor_commands_in_serial
+        self.claw_info = claw_info
+        self.servo_control.move(self.current_pos, self.claw_info[Robot.CLAW_HALF_OPEN])
+        self.current_claw = self.claw_info[Robot.CLAW_HALF_OPEN]
 
     def fkine(self, args):
         return self.robo_fkine(args)
@@ -19,29 +25,36 @@ class Robot:
             return (xp - rf[0, 3])**2 + (yp - rf[1, 3])**2 + (zp - rf[2, 3])**2
         return fmin_l_bfgs_b(func, x0=q0, approx_grad=True)
 
-    def follow_trajectory(self, trajectory, speed):
+    def follow_trajectory(self, trajectory):
         for position in trajectory:
             self.current_pos = self.ikine(position, self.current_pos)[0]
-            self.servo_control.move(list(self.current_pos), speed)
-            time.sleep(speed*2./1000)
+            self.servo_control.move(list(self.current_pos), self.current_claw)
+            time.sleep(0.5)
 
-    def move_to(self, pos, steps=20, speed=500):
+    def set_motor_positions(self, end_pos, steps=10):
         start = self.current_pos
-        end_pos = self.ikine(pos, self.current_pos)[0]
         print end_pos
         step = (end_pos - start)/steps
         print step
         for i in range(steps):
-            print self.current_pos, "Before"
             self.current_pos = self.current_pos + step
-            print self.current_pos, "After"
-            self.servo_control.move(list(self.current_pos), speed)
+            self.servo_control.move(list(self.current_pos), self.current_claw)
             time.sleep(0.3)
 
+    def move_to(self, pos, steps=20):
+        end_pos = self.ikine(pos, self.current_pos)[0]
+        self.set_motor_positions(end_pos, steps)
+
+
     def open_claw(self):
-        self.servo_control.move(list(self.current_pos), claw_position=ClawPositions.FullOpen)
+        self.current_claw = self.claw_info[Robot.CLAW_OPEN]
+        self.servo_control.move(list(self.current_pos), claw_position=self.current_claw)
 
     def close_claw(self):
-        self.servo_control.move(list(self.current_pos), claw_position=ClawPositions.FullClosed)
+        self.current_claw = self.claw_info[Robot.CLAW_CLOSED]
+        self.servo_control.move(list(self.current_pos), claw_position=self.current_claw)
+
+
+
 
 

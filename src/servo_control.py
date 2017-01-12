@@ -23,6 +23,14 @@ class ClawPositions:
     FullClosed = 1700
 
 
+"""
+    For elab peers robo:
+      1: Step 1, do it serially and provide a very long time gap to 5 seconds: No robot falls seen
+      2: Step 2, reduce the inter motor time to 0.1s: Robot falls seen
+      3. Steo 3, increase the time to 1s:  Slight falls seen at 1 step motion
+      4. Step 4, Further reduce the time to 0.5s  lots of falls
+"""
+
 class SerialServoConnection:
 
     def __init__(self, motor_ports, claw_port, serial_port="/dev/cu.usbmodem1411", demo_mode=False):
@@ -55,14 +63,4 @@ class SerialServoConnection:
         pos_str = "#%dP%d%s"%(claw_port, claw_position, pos_str)
         print pos_str
         self.serial_conn.write(pos_str)
-
-"""
-    For elab peers robo:
-      1: Step 1, do it serially and provide a very long time gap to 5 seconds: No robot falls seen
-      2: Step 2, reduce the inter motor time to 0.1s: Robot falls seen
-      3. Steo 3, increase the time to 1s:  Slight falls seen at 1 step motion
-      4. Step 4, Further reduce the time to 0.5s  lots of falls
-"""
-
-
 
