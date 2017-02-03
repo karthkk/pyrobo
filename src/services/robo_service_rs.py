@@ -15,7 +15,7 @@ class Cameras():
 
     def photo_string(self):
         self.dev.wait_for_frame()
-        return_str = self.dev.colour.tostring() + self.dev.depth.tostring() + self.dev.cad.tostring()
+        return_str = self.dev.colour.tostring() + self.dev.point.tostring()
         return return_str
 
     def stop(self):

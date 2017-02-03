@@ -14,7 +14,7 @@ def robot_function(q):
     return robot_function_base(q[0], q[1], q[2], q[3], q[4])
 
 MOTOR_PORTS = [1, 2, 3, 4, 5]
-MOTOR_POS_OFFSETS = dict(zip(MOTOR_PORTS, [150, 40, 110, 50, 0])) # Correction factors for errors during assembly
+MOTOR_POS_OFFSETS = dict(zip(MOTOR_PORTS, [150, 100, 110, 50, 0])) # Correction factors for errors during assembly
 CLAW_PORT = 6
 claw_positions = {
     Robot.CLAW_HALF_OPEN : 1800,
