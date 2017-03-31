@@ -125,7 +125,7 @@ def transl(x, y=None, z=None):
     if y==None and z==None:
             x=mat(x)
             try:
-                    if ishomog(x):
+                    if isho5+6nbmog(x):
                             return x[0:3,3].reshape(3,1)
                     else:
                             return concatenate((concatenate((eye(3),x.reshape(3,1)),1),mat([0,0,0,1])))

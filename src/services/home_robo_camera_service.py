@@ -6,6 +6,7 @@ import threading
 import time
 import numpy as np
 from datetime import datetime
+import serial
 
 class Cameras(threading.Thread):
 
@@ -59,7 +60,7 @@ class SerialMotorPostitions():
         return "%sT%d\r\n"%(''.join([ "#%dP%d"%(x,y) for (x,y) in zip(self.motor_ids[:len(pos)], pos)]), self.default_speed)
 
     def validate_motor_positions(self, pos):
-        return all([499 < x < 2501 for x in pos])
+        return all([100 < x < 3001 for x in pos])
 
     def move_to(self, pos):
         pos_ints = [int(x) for x in pos]
@@ -97,15 +98,18 @@ def make_app():
     return tornado.web.Application([
         (r"/camera", CameraHandler),
         (r"/robot/(\d+)/(\d+)/(\d+)/(\d+)/(\d+)/(\d+)/", RobotMoveHandler),
-	(r"robot/init",RobotInitHandler ),
+	        (r"/robot/init",RobotInitHandler ),
     ])
 global camera
+global serial_pos
+
 if __name__ == "__main__":
     camera = Cameras()
+    serial_pos = SerialMotorPostitions()
     camera.start()
     app = make_app()
-    app.listen(8888)
-    print("Starting server on 8888")
+    app.listen(8889)
+    print("Starting server on 8889")
     try:
         tornado.ioloop.IOLoop.current().start()
     except:
