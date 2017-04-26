@@ -51,4 +51,5 @@ while True:
             update_state(motor, direction)
 
 if __name__ == '__main__':
-    move_robot()
+    move_rob
+    ot()
