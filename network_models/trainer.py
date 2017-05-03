@@ -76,9 +76,9 @@ class OfficeTrainer(Trainer):
     cad_dtype = np.uint8
     pnt_dtype = np.float32
 
-    ROBOT_URL = 'http://robot.local:8888/robot/%d/%d/%d/%d/%d/%d/'
-    FRONT_CAMERA_URL = 'http://localhost:8891/camera'
-    MAIN_CAMERA_URL = 'http://robot.local:8888/camera'
+    ROBOT_URL = 'http://robot.staples.com:8888/robot/%d/%d/%d/%d/%d/%d/'
+    FRONT_CAMERA_URL = 'http://solar-02.staples.com:8891/camera'
+    MAIN_CAMERA_URL = 'http://robot.staples.com:8888/camera'
 
 
     def get_front_camera(self):
