@@ -112,10 +112,10 @@ class PurchasePredNetOffice(MulticamRobotNet):
 
     def predict(self, sess, main_im, front_im, depth, motor_state):
         out_pred = sess.run(tf.nn.softmax(self.layers['out']),
-                            {self.main: resize_to_model(main_im).reshape((1, 224, 224, 3)),
-                             self.front: resize_to_model(front_im).reshape((1, 224, 224, 3)),
+                            {self.main_img: resize_to_model(main_im).reshape((1, 224, 224, 3)),
+                             self.front_img: resize_to_model(front_im).reshape((1, 224, 224, 3)),
                              self.depth: resize_to_model(depth, (112,112)).reshape((1, 112*112)),
-                             self.motor_state: motor_state})
+                             self.motor_state: motor_state.reshape((1,6))})
         choice = np.argmax(out_pred)
         motor = choice / 2
         direction = choice % 2 * 2 - 1

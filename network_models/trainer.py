@@ -41,7 +41,7 @@ class Trainer():
         self.sess.run(tf.global_variables_initializer())
         model_files_available = os.listdir(self.model_location)
         if not model_files_available:
-            self.net.load(google_net_location)
+            self.net.load(google_net_location, self.sess, True)
         else:
             if self.saver is None:
                 self.saver = tf.train.Saver()
@@ -56,6 +56,8 @@ class Trainer():
             [_, lv] = self.sess.run([self.train, self.loss], batch_data)
             if step%print_every == 0:
                 print("Episode: %d, Step: %s, Loss: %f"%(current_episode, step, lv))
+        if saver is None:
+            saver = tf.train.Saver()
         self.saver.save(self.sess, self.model_save_path())
 
     def model_save_path(self):
@@ -96,9 +98,9 @@ class OfficeTrainer(Trainer):
         response.close()
         return col, pnt, cad, dep, self.get_front_camera()
 
-    def predict(self, sess, motor_state):
+    def predict(self,  motor_state):
         col, pnt, cad, dep, fnt = self.get_images()
-        return self.net.predict(sess, cad, fnt, dep, motor_state)
+        return self.net.predict(self.sess, cad, fnt, dep, motor_state)
 
     def get_data_to_save(self):
         col, pnt, cad, dep, fnt = self.get_images()
