@@ -64,7 +64,7 @@ class PurchasePredNetHome(MulticamRobotNet):
         out_pred = sess.run(tf.nn.softmax(self.layers['out']),
                             {self.left_img: resize_to_model(left_im).reshape((1, 224, 224, 3)),
                              self.right_img: resize_to_model(right_im).reshape((1, 224, 224, 3)),
-                             self.motor_state: motor_state})
+                             self.motor_state: motor_state.reshape((1,6))})
         choice = np.argmax(out_pred)
         motor = choice / 2
         direction = choice % 2 * 2 - 1

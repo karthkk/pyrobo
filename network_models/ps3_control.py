@@ -4,6 +4,8 @@ import urllib2
 import copy
 import numpy as np
 
+
+MOTOR_STEP = 25
 DEFAULT_MOTOR_STATE = {0:1500, 1:1500, 2:1500, 3:1500, 4:1500, 5:1500}
 button_motor_map = {"0": [0, -1], "1": [0, +1], 
                     "2": [1, -1], "3": [1, +1],
@@ -27,7 +29,7 @@ class PS3_Control():
         self.move_robot()
 
     def motor_state_array(self):
-        return np.array([float(self.motor_state[i]) for i in range(6)], dtype=np.float32)
+        return np.array([float(self.motor_state[i]) for i in range(6)], dtype=np.float)
 
     def get_ps3_out(self):
         response=urllib2.urlopen(self.ps3_url)
@@ -55,7 +57,7 @@ class PS3_Control():
 
 
     def update_state(self, motor_id, update_direction):
-        self.motor_state[motor_id] = self.motor_state[motor_id] + 50*update_direction
+        self.motor_state[motor_id] = self.motor_state[motor_id] + MOTOR_STEP*update_direction
         self.move_robot()
          
 class OfficePs3Control(PS3_Control):

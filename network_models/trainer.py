@@ -56,8 +56,8 @@ class Trainer():
             [_, lv] = self.sess.run([self.train, self.loss], batch_data)
             if step%print_every == 0:
                 print("Episode: %d, Step: %s, Loss: %f"%(current_episode, step, lv))
-        if saver is None:
-            saver = tf.train.Saver()
+        if self.saver is None:
+            self.saver = tf.train.Saver()
         self.saver.save(self.sess, self.model_save_path())
 
     def model_save_path(self):
@@ -158,18 +158,71 @@ class OfficeTrainer(Trainer):
 
 class HomeTrainer(Trainer):
 
+    im_shape = (480, 640, 3)
+    im_sz = reduce(mul, im_shape)
+    ROBOT_URL = 'http://localhost:8889/robot/%d/%d/%d/%d/%d/%d/'
+    CAMERA_URL = 'http://localhost:8889/camera'
+
     def setup_models(self):
         self.net = multicam_net.PurchasePredNetHome()
 
-    pass
+
+    def get_images(self):
+        response = urllib2.urlopen(HomeTrainer.CAMERA_URL)
+        left = from_buffer(response.read(HomeTrainer.im_sz), HomeTrainer.im_shape, np.uint8)
+        right = from_buffer(response.read(HomeTrainer.im_sz), HomeTrainer.im_shape, np.uint8)
+        response.close()
+        return left, right
+
+    def predict(self,  motor_state):
+        left_im, right_im = self.get_images()
+        return self.net.predict(self.sess, left_im, right_im, motor_state)
+
+    def get_data_to_save(self):
+        left, right = self.get_images()
+        return [["left_image", left, data.IMG_TYP],
+        ["right_image", right, data.IMG_TYP]]
+
+    def load_all_training_data(self):
+        train_files = [os.path.join(self.train_data_location, f) for f in os.listdir(self.train_data_location)
+                       if f.endswith('.tfrecords')]
+        img_cnt = 0
+        for train_fl in train_files:
+            img_cnt += data.TFDataReader(train_fl).count()
+        train_inp = np.zeros([2, img_cnt, 224, 224, 3], dtype=np.uint8)
+        train_labels = np.zeros([img_cnt, ], dtype=np.int32)
+        train_states = np.zeros([img_cnt, 6], dtype=np.float32)
+        idx = 0
+        for train_fl in train_files:
+            reader = data.TFDataReader(train_fl)
+            fds = reader.readall((["left_image", data.IMG_TYP],
+                                  ["right_image", data.IMG_TYP],
+                                  ['motor', data.INT_TYP],
+                                  ['direction', data.INT_TYP],
+                                  ['motor_state', data.FLT_TYP]))
+            for fd in fds:
+                train_inp[0, idx, ...] = multicam_net.resize_to_model(fd['left_image'])
+                train_inp[1, idx, ...] = multicam_net.resize_to_model(fd['right_image'])
+                motor = int(fd['motor'][0])
+                direction = int(fd['direction'][0])
+                train_states[idx, :] = np.array(fd['motor_state'])
+                label = motor_2_label(motor, direction)
+
+                train_labels[idx] = label
+                idx += 1
+
+        return ((train_inp, train_labels, train_states), img_cnt)
 
 
-
-
-#                     writer.add( [["left_image", left_im, data.IMG_TYP],
-#                                 ["right_image", right_im, data.IMG_TYP],
-#                                 ['motor', [motor], data.INT_TYP],
-#                                 ['direction', [direction], data.INT_TYP],
-#                                 ['motor_state', [motor_state[i] for i in range(6)], data.INT_TYP]])
+    def get_batch(self, training_data, idxes):
+        (train_inp, train_labels, train_states) = training_data
+        left_im = train_inp[0, idxes, ...]
+        right_im = train_inp[1, idxes, ...]
+        labels_x = train_labels[idxes]
+        states = train_states[idxes, ...]
+        return {self.labels_pl: labels_x,
+                self.net.left_img: left_im,
+                self.net.right_img: right_im,
+                self.net.motor_state: states}
 
 
