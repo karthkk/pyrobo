@@ -8,6 +8,9 @@ n_classes = 12
 def resize_to_model(im, shape=(224, 224)):
     return cv2.resize(im, shape)
 
+def get_categorical(prob_n):
+    csprob = np.cumsum(prob_n)
+    return (csprob > np.random.rand()).argmax()
 
 class MulticamRobotNet(Network):
     def vgg_to_transforms(self, datapath, transforms):
@@ -26,13 +29,16 @@ class MulticamRobotNet(Network):
         f_left = lambda x: 'l_' + x if x.startswith('conv') else x
         f_right = lambda x: 'r_' + x if x.startswith('conv') else x
         out_dict = self.vgg_to_transforms(data_path, [f_left, f_right])
-        self.load_from_dict(out_dict, ignore_missing, session)
+        self.load_from_dict(out_dict, ignore_missb
+          ing, session)
 
 
 class PurchasePredNetHome(MulticamRobotNet):
 
     def __init__(self, trainable=True):
         self.inputs = []
+        self.initializer = None
+        self.vars = []
         self.left_img = tf.placeholder(tf.float32, shape=[None, 224, 224, 3])
         self.right_img = tf.placeholder(tf.float32, shape=[None, 224, 224, 3])
         self.motor_state = tf.placeholder(tf.float32, shape=(None, 6))
@@ -43,14 +49,14 @@ class PurchasePredNetHome(MulticamRobotNet):
 
     def setup(self):
         (self.feed('left')
-             .conv(7, 7, 64, 2, 2, name='l_conv1_7x7_s2', trainable=False)
+             .conv(7, 7, 64, 2, 2, name='l_conv1_7x7_s2', trainable=True)
              .conv(5, 5, 64, 1, 1, name='l_conv2')
              .conv(5, 5, 64, 1, 1, name='l_conv3')
              .spatial_softmax(name='l_ss'))
 
 
         (self.feed('right')
-             .conv(7, 7, 64, 2, 2, name='r_conv1_7x7_s2', trainable=False)
+             .conv(7, 7, 64, 2, 2, name='r_conv1_7x7_s2', trainable=True    )
              .conv(5, 5, 64, 1, 1, name='r_conv2')
              .conv(5, 5, 64, 1, 1, name='r_conv3')
              .spatial_softmax(name='r_ss'))
@@ -60,8 +66,12 @@ class PurchasePredNetHome(MulticamRobotNet):
              .fc(24, name='fc8_a')
              .fc(12, relu=False, name='out'))
 
+        (self.feed('out')
+            .softmax(name='softmax'))
+
+
     def predict(self, sess, left_im, right_im, motor_state):
-        out_pred = sess.run(tf.nn.softmax(self.layers['out']),
+        out_pred = sess.run(tf.nn.softmax(self.layers['softmax']),
                             {self.left_img: resize_to_model(left_im).reshape((1, 224, 224, 3)),
                              self.right_img: resize_to_model(right_im).reshape((1, 224, 224, 3)),
                              self.motor_state: motor_state.reshape((1,6))})
@@ -108,15 +118,18 @@ class PurchasePredNetOffice(MulticamRobotNet):
              .fc(36, name='fc8_a')
              .fc(12, relu=False, name='out'))
 
+        (self.feed('out')
+            .softmax(name='softmax'))
+
 
 
     def predict(self, sess, main_im, front_im, depth, motor_state):
-        out_pred = sess.run(tf.nn.softmax(self.layers['out']),
+        out_pred = sess.run(tf.nn.softmax(self.layers['softmax']),
                             {self.main_img: resize_to_model(main_im).reshape((1, 224, 224, 3)),
                              self.front_img: resize_to_model(front_im).reshape((1, 224, 224, 3)),
                              self.depth: resize_to_model(depth, (112,112)).reshape((1, 112*112)),
                              self.motor_state: motor_state.reshape((1,6))})
-        choice = np.argmax(out_pred)
+        choice =get_categorical(out_pred    )
         motor = choice / 2
         direction = choice % 2 * 2 - 1
         return (motor, direction)
