@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../images/gan/CycleGAN-tensorflow/.idea/CycleGAN-tensorflow.iml" filepath="$PROJECT_DIR$/../images/gan/CycleGAN-tensorflow/.idea/CycleGAN-tensorflow.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/pyrobo.iml" filepath="$PROJECT_DIR$/.idea/pyrobo.iml" />
     </modules>
   </component>
 </project>
-
